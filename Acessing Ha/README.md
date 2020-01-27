@@ -8,3 +8,5 @@ Different ways to acess Home Assistant from outside Network
     Create a free acount in zerotire one website
     Log in and got to Networks tab and create a new network and notedown your Network Id
     
+    ![](image/1.jpg)
+    
