@@ -1,0 +1,385 @@
+esphome:
+  name: lokesh_room
+  platform: ESP8266
+  board: d1_mini
+
+
+wifi:
+  ssid: !secret ssid
+  password: !secret pass
+  manual_ip:
+    static_ip: 192.168.1.24
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Lokesh Room Fallback Hotspot"
+    password: "LzGxzWZ6BFE7"
+
+captive_portal:
+
+# Enable logging
+logger:
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+uart:
+  rx_pin: D7
+  tx_pin: D6
+  baud_rate: 115200
+
+time:
+  - platform: homeassistant
+    id: sntp_time  
+
+globals:
+  - id: nextion_page_id
+    type: int
+    restore_value: no
+    initial_value: '0'
+    
+
+  
+  
+sensor:
+  - platform: wifi_signal
+    name: "Lokesh Room Display"
+    update_interval: 60s      
+  - platform: homeassistant   # get the sensor data from home assistant
+    id: temperature_outside   
+    entity_id: sensor.temp_dark
+  
+   
+  
+  
+
+  - platform: dallas
+    address: 0x2800000B804BA528
+    name: "Lokesh Room Temp"
+    id: temperature_inside
+    unit_of_measurement: 'C'
+    accuracy_decimals: 2
+    filters:
+      - offset: -1.5
+    
+
+ 
+
+switch:
+  - platform: gpio
+    name: "Lokesh room Light"
+    pin: D5
+    inverted: yes
+  - platform: gpio
+    name: "Lokesh room Night Light"
+    pin: D0
+    inverted: yes
+
+dallas:
+  - pin: D4
+  
+binary_sensor:
+#  - platform: gpio
+#    pin: D1
+#    name: "Lokesh Room PIR"
+#    device_class: motion
+
+# define buttons in nextion display what it does when pressed
+# page navigation
+    #  page 0
+  - platform: nextion
+    page_id: 0
+    component_id: 9
+    name: "light"
+    internal: true # if false u will see a binary sensor in homeassistant which can be used in automation
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.lokesh_room 
+  - platform: nextion
+    page_id: 0
+    component_id: 7
+    name: "go to page1"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=1;
+
+        - component.update: nd
+  - platform: nextion
+    page_id: 0
+    component_id: 8
+    name: "to page 2"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=2;
+        - component.update: nd
+
+# page 1 Fan buttons
+  
+  - platform: nextion
+    page_id: 1
+    component_id: 1
+    name: "to page 0"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=0;
+        - component.update: nd 
+        
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    name: "to page 2"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=2;
+        - component.update: nd  
+        
+  - platform: nextion
+    page_id: 1
+    component_id: 11
+    name: "light1"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.lokesh_room
+              
+  - platform: nextion
+    page_id: 1
+    component_id: 5
+    name: "Fan1"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.set_value
+            data:
+              entity_id: input_number.lokesh_fan
+              value: "1.0"
+    on_release:
+      then:
+        - delay: 2s
+        - component.update: nd            
+  
+  - platform: nextion
+    page_id: 1
+    component_id: 6
+    name: "Fan2"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.set_value
+            data:
+              entity_id: input_number.lokesh_fan
+              value: "2.0"
+    on_release:
+      then:
+        - component.update: nd
+        
+  - platform: nextion
+    page_id: 1
+    component_id: 7
+    name: "Fan3"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.set_value
+            data:
+              entity_id: input_number.lokesh_fan
+              value: "3.0"
+    on_release:
+      then:
+        - component.update: nd
+        
+  - platform: nextion
+    page_id: 1
+    component_id: 8
+    name: "Fan4"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.set_value
+            data:
+              entity_id: input_number.lokesh_fan
+              value: "4.0"
+    on_release:
+      then:
+        - component.update: nd
+  
+  - platform: nextion
+    page_id: 1
+    component_id: 9
+    name: "Fan on off"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_boolean.toggle
+            data:
+              entity_id: input_boolean.lokesh_fan
+    on_release:
+      then:
+        - component.update: nd
+        
+# page 2 A/c
+  - platform: nextion
+    page_id: 2
+    component_id: 1
+    name: "to page 1"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=1;
+        - component.update: nd 
+        
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    name: "to page 0"
+    internal: true
+    on_release:
+      then:
+        - lambda: |-
+            id(nextion_page_id)=0;
+        - component.update: nd  
+        
+  - platform: nextion
+    page_id: 2
+    component_id: 3
+    name: "light1"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.lokesh_room
+   
+  - platform: nextion
+    page_id: 2
+    component_id: 9
+    name: "Ac 20"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_select.select_option
+            data:
+              entity_id: input_select.lokesh_ac
+              option: "20"
+    on_release:
+      then:
+        - component.update: nd            
+
+  - platform: nextion
+    page_id: 2
+    component_id: 8
+    name: "Ac 21"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_select.select_option
+            data:
+              entity_id: input_select.lokesh_ac
+              option: "21"
+    on_release:
+      then:
+        - component.update: nd
+
+  - platform: nextion
+    page_id: 2
+    component_id: 7
+    name: "Ac 22"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_select.select_option
+            data:
+              entity_id: input_select.lokesh_ac
+              option: "22"
+    on_release:
+      then:
+        - component.update: nd            
+   
+  - platform: nextion
+    page_id: 2
+    component_id: 6
+    name: "Ac 23"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_select.select_option
+            data:
+              entity_id: input_select.lokesh_ac
+              option: "23"
+    on_release:
+      then:
+        - component.update: nd
+        
+  - platform: nextion
+    page_id: 2
+    component_id: 5
+    name: "Ac off"
+    internal: true
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_select.select_option
+            data:
+              entity_id: input_select.lokesh_ac
+              option: "off"
+    on_release:
+      then:
+        - component.update: nd
+        
+        
+display:
+  - platform: nextion
+    update_interval: 5s
+    id: nd
+    lambda: |-
+          it.set_wait_for_ack(false);
+            
+          auto date = id(sntp_time).now().strftime("%d/ %b");
+          auto time = id(sntp_time).now().strftime("%I:%M");
+          
+          if (id(nextion_page_id) == 0) {
+          
+          it.set_component_text("t1", "Out");
+          it.set_component_text("time", time.c_str());
+          it.set_component_text("date", date.c_str());
+          it.set_component_text_printf("out","%2.1f",id(temperature_outside).state);
+          it.set_component_text_printf("in","%2.1f",id(temperature_inside).state);
+          } 
+          else if (id(nextion_page_id) == 1) {
+          it.set_component_text("t0", "FAN");
+
+          }
+          else if (id(nextion_page_id) == 2) {
+          it.set_component_text("t0", "A/C");
+          }
+          
